@@ -1,5 +1,6 @@
 """CLI entry point for Horizon."""
 
+import argparse
 import asyncio
 import sys
 from pathlib import Path
@@ -16,6 +17,10 @@ console = Console()
 
 def main():
     """Main CLI entry point."""
+    parser = argparse.ArgumentParser(description="Horizon - AI-Driven Information Aggregation System")
+    parser.add_argument("--hours", type=int, help="Force fetch from last N hours (ignoring seen history)")
+    args = parser.parse_args()
+
     try:
         # Load environment variables from .env file
         load_dotenv()
@@ -40,7 +45,7 @@ def main():
 
         # Create and run orchestrator
         orchestrator = HorizonOrchestrator(config, storage)
-        asyncio.run(orchestrator.run())
+        asyncio.run(orchestrator.run(force_hours=args.hours))
 
     except KeyboardInterrupt:
         console.print("\n[yellow]⚠️  Interrupted by user[/yellow]")

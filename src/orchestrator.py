@@ -33,14 +33,18 @@ class HorizonOrchestrator:
         self.storage = storage
         self.console = Console()
 
-    async def run(self) -> None:
-        """Execute the complete workflow."""
+    async def run(self, force_hours: int = None) -> None:
+        """Execute the complete workflow.
+
+        Args:
+            force_hours: Optional override for time window in hours
+        """
         self.console.print("[bold cyan]🌅 Horizon - Starting aggregation...[/bold cyan]\n")
 
         try:
             # 1. Determine time window
             seen_data = self.storage.load_seen_items()
-            since = self._determine_time_window(seen_data)
+            since = self._determine_time_window(seen_data, force_hours)
             self.console.print(f"📅 Fetching content since: {since.strftime('%Y-%m-%d %H:%M:%S')}\n")
 
             # 2. Fetch content from all sources
@@ -116,16 +120,19 @@ class HorizonOrchestrator:
             self.console.print(f"[bold red]❌ Error: {e}[/bold red]")
             raise
 
-    def _determine_time_window(self, seen_data) -> datetime:
+    def _determine_time_window(self, seen_data, force_hours: int = None) -> datetime:
         """Determine the time window for fetching content.
 
         Args:
             seen_data: Seen items data
+            force_hours: Optional override for time window in hours
 
         Returns:
             datetime: Start time for fetching
         """
-        if seen_data.last_run:
+        if force_hours:
+            since = datetime.now(timezone.utc) - timedelta(hours=force_hours)
+        elif seen_data.last_run:
             since = seen_data.last_run
         else:
             # Default to configured time window

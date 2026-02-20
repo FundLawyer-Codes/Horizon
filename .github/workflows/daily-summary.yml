@@ -35,11 +35,10 @@ jobs:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: uv run horizon --hours 24
 
-      - name: Commit and push summary
-        run: |
-          git config --global user.name "Horizon Bot"
-          git config --global user.email "bot@horizon.local"
-          git add data/summaries/
-          # Only commit if there are changes
-          git diff --staged --quiet || git commit -m "📝 Daily Summary: $(date +'%Y-%m-%d')"
-          git push
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          commit_message: "📝 Daily Summary: $(date +'%Y-%m-%d')"
+          publish_branch: gh-pages

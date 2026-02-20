@@ -1,14 +1,15 @@
 theme: jekyll-theme-minimal
 title: Horizon Daily
 description: AI-curated daily digest of tech and research news
-baseurl: "/Horizon" # the subpath of your site, e.g. /blog
+baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://thysrael.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
 # Build settings
 markdown: kramdown
-plugins:
-  - jekyll-feed
-  - jekyll-seo-tag
+future: true # Allow future posts to be published
+exclude:
+  - ".github"
+  - "node_modules"
 
 defaults:
   - scope:

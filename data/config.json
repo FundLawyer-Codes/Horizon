@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "ai": {
+    "provider": "openai",
+    "model": "deepseek-reasoner",
+    "base_url": "https://api.deepseek.com",
+    "api_key_env": "OPENAI_API_KEY",
+    "temperature": 0.3,
+    "max_tokens": 16384
+  },
+  "sources": {
+    "github": [
+      {
+        "type": "user_events",
+        "username": "torvalds",
+        "enabled": true,
+        "priority": "high"
+      },
+      {
+        "type": "user_events",
+        "username": "karpathy",
+        "enabled": true,
+        "priority": "high"
+      },
+      {
+        "type": "repo_releases",
+        "owner": "astral-sh",
+        "repo": "uv",
+        "enabled": true,
+        "priority": "medium"
+      }
+    ],
+    "hackernews": {
+      "enabled": true,
+      "fetch_top_stories": 10,
+      "min_score": 200
+    },
+    "rss": [
+      {
+        "name": "Simon Willison",
+        "url": "https://simonwillison.net/atom/everything/",
+        "enabled": true,
+        "category": "ai-tools"
+      },
+      {
+        "name": "Eli Bendersky",
+        "url": "https://eli.thegreenplace.net/feeds/all.atom.xml",
+        "enabled": true,
+        "category": "programming"
+      },
+      {
+        "name": "Mastodon - Simon Wolf",
+        "url": "https://mastodon.social/@simonw.rss",
+        "enabled": true,
+        "category": "microblog"
+      }
+    ],
+    "twitter": [
+      {
+        "username": "karpathy",
+        "enabled": true
+      },
+      {
+        "username": "ylecun",
+        "enabled": true
+      },
+      {
+        "username": "OpenAI",
+        "enabled": true
+      }
+    ]
+  },
+  "filtering": {
+    "ai_score_threshold": 6.0,
+    "time_window_hours": 72
+  }
+}

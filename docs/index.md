@@ -5,7 +5,7 @@ title: Home
 
 # Horizon Daily Summaries
 
-Welcome to the daily digest of [Horizon](https://github.com/thysrael/horizon).
+Welcome to the daily digest of [Horizon](https://github.com/thysrael/Horizon).
 
 ## Latest Summaries
 

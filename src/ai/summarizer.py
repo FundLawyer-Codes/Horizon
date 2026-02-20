@@ -85,11 +85,14 @@ class DailySummarizer:
             items_json=items_json
         )
 
+        # Use client's max_tokens if available, otherwise default to a safe value
+        max_tokens = getattr(self.client, "max_tokens", 4096)
+
         summary = await self.client.complete(
             system=DAILY_SUMMARY_SYSTEM,
             user=user_prompt,
             temperature=0.5,
-            max_tokens=12288
+            max_tokens=max_tokens
         )
 
         # Add header with metadata

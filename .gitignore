@@ -40,6 +40,8 @@ ENV/
 data/seen.json
 data/summaries/*.md
 
+docs/_posts/*.md
+
 # Logs
 logs/*.log
 *.log

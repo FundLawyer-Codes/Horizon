@@ -1,6 +1,24 @@
-# Horizon - AI-Driven Information Aggregation System
+<div align="center">
 
-Horizon is an intelligent information aggregation system that tracks academic peers and social trends across multiple platforms, using AI to filter effectively important content.
+# 🌅 Horizon
+
+**AI-Driven Information Aggregation System**
+
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json&style=flat-square)](https://github.com/astral-sh/uv)
+[![CI Status](https://github.com/thysrael/horizon/actions/workflows/ci.yml/badge.svg?style=flat-square)](https://github.com/thysrael/horizon/actions)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
+<p align="center">
+  <img src="docs/assets/horizon-header.svg" alt="Horizon Header" />
+</p>
+
+*Horizon monitors academic peers and social trends across multiple platforms, using AI to filter effectively important content.*
+
+[Features](#features) • [Installation](#quick-start) • [Configuration](#2-configuration) • [Usage](#3-run-the-aggregator)
+
+</div>
 
 ## Features
 
@@ -122,9 +140,6 @@ The system will:
 ## Development
 
 ```bash
-# Run tests
-uv run pytest
-
 # Format code
 uv run ruff check .
 ```
@@ -325,12 +340,7 @@ Consider following these based on today's high-quality content...
 uv sync  # Reinstall all dependencies
 ```
 
-## Development
 
-Run tests:
-```bash
-uv run pytest tests/
-```
 
 ## License
 

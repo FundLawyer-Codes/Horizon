@@ -15,8 +15,26 @@ from .orchestrator import HorizonOrchestrator
 console = Console()
 
 
+def print_banner():
+    """Print the application banner."""
+    banner = r"""
+[bold blue]
+  _    _            _
+ | |  | |          (_)
+ | |__| | ___  _ __ _ ___  ___  _ __
+ |  __  |/ _ \| '__| |_  / / _ \| '_ \
+ | |  | | (_) | |  | |/ / | (_) | | | |
+ |_|  |_|\___/|_|  |_/___| \___/|_| |_|
+[/bold blue]
+[cyan]  AI-Driven Information Aggregation System[/cyan]
+    """
+    console.print(banner)
+
+
 def main():
     """Main CLI entry point."""
+    print_banner()
+
     parser = argparse.ArgumentParser(description="Horizon - AI-Driven Information Aggregation System")
     parser.add_argument("--hours", type=int, help="Force fetch from last N hours (ignoring seen history)")
     args = parser.parse_args()

@@ -101,6 +101,35 @@ class HorizonOrchestrator:
             summary_path = self.storage.save_daily_summary(today, summary)
             self.console.print(f"💾 Saved summary to: {summary_path}\n")
 
+            # 8.5. Copy summary to docs/ for GitHub Pages
+            try:
+                import shutil
+                from pathlib import Path
+                
+                # Setup Jekyll post format: YYYY-MM-DD-title.md
+                post_filename = f"{today}-summary.md"
+                posts_dir = Path("docs/_posts")
+                posts_dir.mkdir(parents=True, exist_ok=True)
+                
+                dest_path = posts_dir / f"{today}-summary.md"
+                
+                # Add Jekyll front matter
+                front_matter = (
+                    "---\n"
+                    "layout: default\n"
+                    f"title: \"Horizon Summary: {today}\"\n"
+                    f"date: {today}\n"
+                    "---\n\n"
+                    f"# Horizon Summary: {today}\n\n"
+                )
+                
+                with open(dest_path, "w") as f:
+                    f.write(front_matter + summary)
+                    
+                self.console.print(f"📄 Copied summary to GitHub Pages: {dest_path}\n")
+            except Exception as e:
+                self.console.print(f"[yellow]⚠️  Failed to copy summary to docs/: {e}[/yellow]\n")
+
             # 9. Update seen items
             for item in analyzed_items:
                 self.storage.mark_item_seen(item, seen_data)

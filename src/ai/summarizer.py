@@ -114,7 +114,11 @@ class DailySummarizer:
             data = json.loads(text)
         except json.JSONDecodeError:
             # If JSON parsing fails, return raw response as fallback
-            return header + raw_response.strip()
+            # Clean up potential markdown wrapper in raw response too
+            clean_text = raw_response
+            if "```" in clean_text:
+                clean_text = clean_text.replace("```json", "").replace("```", "")
+            return header + clean_text.strip()
 
         # Build markdown programmatically
         sections = []

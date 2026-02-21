@@ -105,14 +105,14 @@ class HorizonOrchestrator:
             try:
                 import shutil
                 from pathlib import Path
-                
+
                 # Setup Jekyll post format: YYYY-MM-DD-title.md
                 post_filename = f"{today}-summary.md"
                 posts_dir = Path("docs/_posts")
                 posts_dir.mkdir(parents=True, exist_ok=True)
-                
+
                 dest_path = posts_dir / f"{today}-summary.md"
-                
+
                 # Add Jekyll front matter
                 front_matter = (
                     "---\n"
@@ -120,12 +120,19 @@ class HorizonOrchestrator:
                     f"title: \"Horizon Summary: {today}\"\n"
                     f"date: {today}\n"
                     "---\n\n"
-                    f"# Horizon Summary: {today}\n\n"
                 )
-                
+
+                # Check if summary starts with an H1 header and strip it if it duplicates the title
+                summary_content = summary
+                if summary_content.strip().startswith("# Horizon Daily -"):
+                    # Find the first newline and take everything after it
+                    parts = summary_content.split("\n", 1)
+                    if len(parts) > 1:
+                        summary_content = parts[1].strip()
+
                 with open(dest_path, "w") as f:
-                    f.write(front_matter + summary)
-                    
+                    f.write(front_matter + summary_content)
+
                 self.console.print(f"📄 Copied summary to GitHub Pages: {dest_path}\n")
             except Exception as e:
                 self.console.print(f"[yellow]⚠️  Failed to copy summary to docs/: {e}[/yellow]\n")

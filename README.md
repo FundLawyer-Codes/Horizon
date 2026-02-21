@@ -242,15 +242,6 @@ Content is scored 0-10:
 - `ai_score_threshold`: Only include content scoring ≥ this value
 - `time_window_hours`: Fetch content from last N hours (first run only)
 
-
-## Contributing
-
-Contributions welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
-
 ## Roadmap
 
 - [X] Twitter/X integration (via official API)

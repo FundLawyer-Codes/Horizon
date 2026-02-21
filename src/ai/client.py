@@ -56,6 +56,7 @@ class AnthropicClient(AIClient):
 
         self.client = AsyncAnthropic(**kwargs)
         self.model = config.model
+        self.max_tokens = config.max_tokens
 
     async def complete(
         self,
@@ -105,6 +106,7 @@ class OpenAIClient(AIClient):
 
         self.client = AsyncOpenAI(**kwargs)
         self.model = config.model
+        self.max_tokens = config.max_tokens
 
     async def complete(
         self,

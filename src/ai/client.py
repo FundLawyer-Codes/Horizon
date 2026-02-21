@@ -6,7 +6,8 @@ from typing import Optional
 
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 
 from ..models import AIConfig, AIProvider
 
@@ -149,8 +150,8 @@ class GeminiClient(AIClient):
         if not api_key:
             raise ValueError(f"Missing API key: {config.api_key_env}")
 
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(config.model)
+        self.client = genai.Client(api_key=api_key)
+        self.model = config.model
         self.temperature = config.temperature
         self.max_tokens = config.max_tokens
 
@@ -172,12 +173,11 @@ class GeminiClient(AIClient):
         Returns:
             str: Generated text
         """
-        # Gemini combines system and user prompts
-        combined_prompt = f"{system}\n\n{user}"
-
-        response = await self.model.generate_content_async(
-            combined_prompt,
-            generation_config=genai.types.GenerationConfig(
+        response = await self.client.aio.models.generate_content(
+            model=self.model,
+            contents=user,
+            config=types.GenerateContentConfig(
+                system_instruction=system,
                 temperature=temperature,
                 max_output_tokens=max_tokens
             )

@@ -42,18 +42,18 @@ class DailySummarizer:
         # Prepare items as JSON for the AI, including discussion data
         items_data = []
         for item in items:
+            meta = item.metadata
             entry = {
                 "title": item.title,
                 "url": str(item.url),
                 "score": item.ai_score,
-                "summary": item.ai_summary,
+                "summary": meta.get("detailed_summary") or item.ai_summary,
                 "source": f"{item.source_type.value}/{item.author or 'unknown'}",
                 "tags": item.ai_tags,
                 "reason": item.ai_reason,
             }
 
             # Include discussion/engagement metadata for richer summaries
-            meta = item.metadata
             if meta.get("score") or meta.get("descendants"):
                 entry["hn_score"] = meta.get("score")
                 entry["hn_comments"] = meta.get("descendants")
@@ -77,10 +77,6 @@ class DailySummarizer:
             # Include pre-computed enrichment data from metadata
             if meta.get("background"):
                 entry["background"] = meta["background"]
-            if meta.get("related_context"):
-                entry["related_context"] = meta["related_context"]
-            if meta.get("related_stories"):
-                entry["related_stories"] = meta["related_stories"]
 
             items_data.append(entry)
 
@@ -183,14 +179,6 @@ class DailySummarizer:
         if item.get("background"):
             lines.append("")
             lines.append(f"**Background**: {item['background']}")
-
-        if item.get("related_context"):
-            lines.append("")
-            lines.append(f"**Related**: {item['related_context']}")
-
-        if item.get("related_stories"):
-            for rs in item["related_stories"]:
-                lines.append(f"  - [{rs['title']}]({rs['url']}) ({rs['source']})")
 
         if tags_str:
             lines.append("")

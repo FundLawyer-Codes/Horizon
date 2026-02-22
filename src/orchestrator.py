@@ -17,9 +17,7 @@ from .scrapers.reddit import RedditScraper
 from .ai.client import create_ai_client
 from .ai.analyzer import ContentAnalyzer
 from .ai.summarizer import DailySummarizer
-from .ai.recommender import SourceRecommender
 from .ai.enricher import ContentEnricher
-from .search import search_related
 
 
 class HorizonOrchestrator:
@@ -88,17 +86,11 @@ class HorizonOrchestrator:
             today = datetime.utcnow().strftime("%Y-%m-%d")
             summary = await self._generate_summary(important_items, today, len(all_items))
 
-            # 8. Recommend new sources
-            recommendations = await self._recommend_sources(analyzed_items)
-
-            # 9. Save summary with recommendations
-            if recommendations:
-                summary += self._format_recommendations(recommendations)
-
+            # 8. Save summary
             summary_path = self.storage.save_daily_summary(today, summary)
             self.console.print(f"💾 Saved summary to: {summary_path}\n")
 
-            # 9.5. Copy summary to docs/ for GitHub Pages
+            # 8.5. Copy summary to docs/ for GitHub Pages
             try:
                 import shutil
                 from pathlib import Path
@@ -269,11 +261,10 @@ class HorizonOrchestrator:
         return merged
 
     async def _enrich_important_items(self, items: List[ContentItem]) -> None:
-        """Search for related stories and enrich items with background knowledge.
+        """Enrich items with background knowledge (2nd AI pass).
 
-        This is the second AI pass: for each item that passed the score threshold,
-        search for related stories on HN/Reddit, then call AI to generate
-        background knowledge and synthesize related context.
+        For each item that passed the score threshold, call AI to generate
+        background knowledge based on the item's actual content.
 
         Args:
             items: Important items to enrich (modified in-place)
@@ -281,19 +272,10 @@ class HorizonOrchestrator:
         if not items:
             return
 
-        # Step 1: Search for related stories
-        self.console.print(f"🔎 Searching related stories for {len(items)} items...")
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            related_map = await search_related(items, client)
-
-        found = sum(len(v) for v in related_map.values())
-        self.console.print(f"   Found {found} related stories\n")
-
-        # Step 2: AI enrichment (background knowledge + related context)
         self.console.print("📚 Enriching with background knowledge...")
         ai_client = create_ai_client(self.config.ai)
         enricher = ContentEnricher(ai_client)
-        await enricher.enrich_batch(items, related_map)
+        await enricher.enrich_batch(items)
         self.console.print(f"   Enriched {len(items)} items\n")
 
     async def _analyze_content(self, items: List[ContentItem]) -> List[ContentItem]:
@@ -334,47 +316,3 @@ class HorizonOrchestrator:
         summarizer = DailySummarizer(ai_client)
 
         return await summarizer.generate_summary(items, date, total_fetched)
-
-    async def _recommend_sources(self, items: List[ContentItem]) -> List:
-        """Generate source recommendations.
-
-        Args:
-            items: Analyzed items
-
-        Returns:
-            List[SourceRecommendation]: Recommendations
-        """
-        self.console.print("💡 Generating source recommendations...")
-
-        ai_client = create_ai_client(self.config.ai)
-        recommender = SourceRecommender(ai_client)
-
-        return await recommender.recommend_sources(items, min_score=8.0)
-
-    def _format_recommendations(self, recommendations: List) -> str:
-        """Format source recommendations as Markdown.
-
-        Args:
-            recommendations: Source recommendations
-
-        Returns:
-            str: Formatted Markdown section
-        """
-        if not recommendations:
-            return ""
-
-        md = "\n\n---\n\n## 💡 Recommended Sources\n\n"
-        md += "Based on today's high-quality content, consider following:\n\n"
-
-        for rec in recommendations:
-            md += f"### {rec.source_type.value}: {rec.identifier}\n\n"
-            md += f"{rec.reason}\n\n"
-            md += f"**Confidence**: {rec.confidence:.0%}\n\n"
-
-            if rec.sample_content:
-                md += "**Sample content**:\n"
-                for content in rec.sample_content[:3]:
-                    md += f"- {content}\n"
-                md += "\n"
-
-        return md

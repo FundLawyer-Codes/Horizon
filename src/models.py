@@ -151,13 +151,3 @@ class Config(BaseModel):
     ai: AIConfig
     sources: SourcesConfig
     filtering: FilteringConfig
-
-
-class SourceRecommendation(BaseModel):
-    """Recommended information source."""
-
-    source_type: SourceType
-    identifier: str  # username, repo name, RSS URL, etc.
-    reason: str
-    confidence: float  # 0-1
-    sample_content: List[str] = Field(default_factory=list)

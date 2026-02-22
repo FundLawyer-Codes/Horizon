@@ -1,36 +1,37 @@
 """Content enrichment using AI (second-pass analysis).
 
-For items that pass the score threshold, this module generates:
-- Background knowledge to help readers understand the news
-- Synthesized context from related stories found via search
+For items that pass the score threshold, this module:
+1. Searches the web for relevant context (via DuckDuckGo)
+2. Feeds search results + item content to AI to generate grounded background knowledge
 """
 
 import json
-from typing import List, Dict
+import sys
+import os
+from typing import List
 from tenacity import retry, stop_after_attempt, wait_exponential
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, MofNCompleteColumn
+from ddgs import DDGS
 
 from .client import AIClient
-from .prompts import CONTENT_ENRICHMENT_SYSTEM, CONTENT_ENRICHMENT_USER
+from .prompts import (
+    CONCEPT_EXTRACTION_SYSTEM, CONCEPT_EXTRACTION_USER,
+    CONTENT_ENRICHMENT_SYSTEM, CONTENT_ENRICHMENT_USER,
+)
 from ..models import ContentItem
 
 
 class ContentEnricher:
-    """Enriches high-scoring content items with background knowledge and related context."""
+    """Enriches high-scoring content items with background knowledge."""
 
     def __init__(self, ai_client: AIClient):
         self.client = ai_client
 
-    async def enrich_batch(
-        self,
-        items: List[ContentItem],
-        related_map: Dict[str, List[dict]],
-    ) -> None:
-        """Enrich items in-place with background knowledge and related context.
+    async def enrich_batch(self, items: List[ContentItem]) -> None:
+        """Enrich items in-place with background knowledge.
 
         Args:
             items: Content items to enrich (modified in-place)
-            related_map: Mapping of item IDs to related stories from search
         """
         with Progress(
             SpinnerColumn(),
@@ -42,36 +43,110 @@ class ContentEnricher:
             task = progress.add_task("Enriching", total=len(items))
 
             for item in items:
-                related = related_map.get(item.id, [])
                 try:
-                    await self._enrich_item(item, related)
+                    await self._enrich_item(item)
                 except Exception as e:
                     print(f"Error enriching item {item.id}: {e}")
                 progress.advance(task)
+
+    async def _web_search(self, query: str, max_results: int = 3) -> str:
+        """Search the web for context via DuckDuckGo.
+
+        Args:
+            query: Search query
+            max_results: Max number of results
+
+        Returns:
+            Formatted string of search snippets
+        """
+        try:
+            # Suppress primp "Impersonate ... does not exist" stderr warning
+            stderr = sys.stderr
+            sys.stderr = open(os.devnull, "w")
+            try:
+                ddgs = DDGS()
+                results = ddgs.text(query, max_results=max_results)
+            finally:
+                sys.stderr.close()
+                sys.stderr = stderr
+        except Exception:
+            return ""
+
+        if not results:
+            return ""
+
+        lines = []
+        for r in results:
+            title = r.get("title", "")
+            body = r.get("body", "")
+            lines.append(f"- {title}: {body}")
+        return "\n".join(lines)
+
+    async def _extract_concepts(self, item: ContentItem, content_text: str) -> List[str]:
+        """Ask AI to identify concepts that need explanation.
+
+        Args:
+            item: Content item
+            content_text: Extracted content text
+
+        Returns:
+            List of search queries for concepts that need explanation
+        """
+        user_prompt = CONCEPT_EXTRACTION_USER.format(
+            title=item.title,
+            summary=item.ai_summary or item.title,
+            tags=", ".join(item.ai_tags) if item.ai_tags else "",
+            content=content_text[:1000],
+        )
+
+        try:
+            response = await self.client.complete(
+                system=CONCEPT_EXTRACTION_SYSTEM,
+                user=user_prompt,
+                temperature=0.3,
+            )
+            result = json.loads(response.strip().strip("`").replace("json\n", "", 1))
+            queries = result.get("queries", [])
+            return queries[:3]
+        except Exception:
+            return []
 
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(min=2, max=10)
     )
-    async def _enrich_item(
-        self, item: ContentItem, related_stories: List[dict]
-    ) -> None:
-        """Enrich a single item with background and related context.
+    async def _enrich_item(self, item: ContentItem) -> None:
+        """Enrich a single item with background knowledge.
+
+        Steps:
+        1. Ask AI which concepts in the news need explanation
+        2. Search the web for those concepts
+        3. Ask AI to generate background based on search results
 
         Args:
             item: Content item to enrich (modified in-place via metadata)
-            related_stories: Related stories from search
         """
-        # Build related stories text
-        related_text = ""
-        if related_stories:
-            lines = []
-            for r in related_stories[:6]:
-                source = r.get("source", "unknown")
-                score = r.get("score", 0)
-                lines.append(f"- [{r['title']}]({r['url']}) (source: {source}, score: {score})")
-            related_text = "\n".join(lines)
+        # Extract content text (without comments section)
+        content_text = ""
+        if item.content:
+            if "--- Top Comments ---" in item.content:
+                content_text = item.content.split("--- Top Comments ---", 1)[0].strip()
+            else:
+                content_text = item.content
+        content_text = content_text[:4000] if content_text else ""
 
+        # Step 1: AI identifies concepts to explain
+        queries = await self._extract_concepts(item, content_text)
+
+        # Step 2: Search web for each concept
+        web_sections = []
+        for query in queries:
+            snippets = await self._web_search(query)
+            if snippets:
+                web_sections.append(f"**{query}:**\n{snippets}")
+        web_context = "\n\n".join(web_sections) if web_sections else ""
+
+        # Step 3: AI generates background grounded in search results
         user_prompt = CONTENT_ENRICHMENT_USER.format(
             title=item.title,
             url=str(item.url),
@@ -79,7 +154,8 @@ class ContentEnricher:
             score=item.ai_score or 0,
             reason=item.ai_reason or "",
             tags=", ".join(item.ai_tags) if item.ai_tags else "",
-            related_stories=related_text or "No related stories found.",
+            content=content_text,
+            web_context=web_context or "No web search results available.",
         )
 
         response = await self.client.complete(
@@ -101,13 +177,18 @@ class ContentEnricher:
             else:
                 raise ValueError(f"Invalid JSON response: {response}")
 
-        # Store enrichment results in metadata
+        # Combine structured sub-fields into a single detailed_summary
+        parts = []
+        for field in ("whats_new", "why_it_matters", "key_details"):
+            text = result.get(field, "").strip()
+            if text:
+                parts.append(text)
+
+        if parts:
+            item.metadata["detailed_summary"] = " ".join(parts)
+        elif result.get("summary"):
+            # Fallback: accept legacy single-field format
+            item.metadata["detailed_summary"] = result["summary"]
+
         if result.get("background"):
             item.metadata["background"] = result["background"]
-        if result.get("related_context"):
-            item.metadata["related_context"] = result["related_context"]
-        if related_stories:
-            item.metadata["related_stories"] = [
-                {"title": r["title"], "url": r["url"], "source": r.get("source", "")}
-                for r in related_stories[:5]
-            ]

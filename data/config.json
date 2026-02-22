@@ -2,20 +2,14 @@
   "version": "1.0",
   "ai": {
     "provider": "openai",
-    "model": "deepseek-reasoner",
+    "model": "deepseek-chat",
     "base_url": "https://api.deepseek.com",
     "api_key_env": "OPENAI_API_KEY",
     "temperature": 0.3,
-    "max_tokens": 12288
+    "max_tokens": 8192
   },
   "sources": {
     "github": [
-      {
-        "type": "user_events",
-        "username": "torvalds",
-        "enabled": true,
-        "priority": "high"
-      },
       {
         "type": "user_events",
         "username": "karpathy",
@@ -43,16 +37,10 @@
         "category": "ai-tools"
       },
       {
-        "name": "Eli Bendersky",
-        "url": "https://eli.thegreenplace.net/feeds/all.atom.xml",
+        "name": "GitHub Trending - Daily",
+        "url": "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
         "enabled": true,
-        "category": "programming"
-      },
-      {
-        "name": "Mastodon - Simon Wolf",
-        "url": "https://mastodon.social/@simonw.rss",
-        "enabled": true,
-        "category": "microblog"
+        "category": "github-trending"
       }
     ],
     "twitter": [

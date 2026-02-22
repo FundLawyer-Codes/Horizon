@@ -23,11 +23,6 @@ uv sync --quiet
 uv run horizon --hours 48
 
 # 4. Deploy docs to gh-pages
-if git diff --quiet docs/; then
-    echo "$LOG_PREFIX No new summary generated, skipping deploy."
-    exit 0
-fi
-
 echo "$LOG_PREFIX Deploying to gh-pages..."
 
 # Use a temporary worktree to update gh-pages without switching branches

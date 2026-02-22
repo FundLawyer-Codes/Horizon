@@ -20,7 +20,7 @@ git pull --quiet origin main
 uv sync --quiet
 
 # 3. Run Horizon
-uv run horizon --hours 48
+uv run horizon --hours 12
 
 # 4. Deploy docs to gh-pages
 echo "$LOG_PREFIX Deploying to gh-pages..."

@@ -153,7 +153,10 @@ class DailySummarizer:
 
     def _format_item(self, item: ContentItem, labels: dict, language: str) -> str:
         """Format a single ContentItem into Markdown."""
-        title = item.title.replace("[", "(").replace("]", ")")
+        title = (
+            item.metadata.get(f"title_{language}")
+            or item.title
+        ).replace("[", "(").replace("]", ")")
         url = str(item.url)
         score = item.ai_score or "?"
         meta = item.metadata

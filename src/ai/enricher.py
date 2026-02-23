@@ -182,6 +182,9 @@ class ContentEnricher:
 
         # Combine structured sub-fields into per-language detailed_summary
         for lang in ("en", "zh"):
+            if result.get(f"title_{lang}"):
+                item.metadata[f"title_{lang}"] = result[f"title_{lang}"]
+
             parts = []
             for field in ("whats_new", "why_it_matters", "key_details"):
                 text = result.get(f"{field}_{lang}", "").strip()

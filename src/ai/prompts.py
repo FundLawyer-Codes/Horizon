@@ -84,6 +84,7 @@ CONTENT_ENRICHMENT_SYSTEM = """You are a knowledgeable technical writer who help
 Given a high-scoring news item, its content, and web search results about the topic, your job is to produce a structured analysis.
 
 Provide EACH text field in BOTH English and Chinese. Use the following key naming convention:
+- title_en / title_zh
 - whats_new_en / whats_new_zh
 - why_it_matters_en / why_it_matters_zh
 - key_details_en / key_details_zh
@@ -91,6 +92,8 @@ Provide EACH text field in BOTH English and Chinese. Use the following key namin
 - community_discussion_en / community_discussion_zh
 
 Field definitions:
+0. **title** (one short phrase, ≤15 words): A clear, accurate headline for the news item.
+
 1. **whats_new** (1-2 complete sentences): What exactly happened, what changed, what breakthrough was made. Be specific — mention names, versions, numbers, dates when available.
 
 2. **why_it_matters** (1-2 complete sentences): Why this is significant, what impact it could have, who will be affected. Connect to the broader ecosystem or industry trends.
@@ -130,6 +133,8 @@ CONTENT_ENRICHMENT_USER = """Provide a structured bilingual analysis for the fol
 
 Respond with valid JSON only. Each _en field must be in English; each _zh field must be in Simplified Chinese. Every field MUST be at least one complete sentence (except community_discussion fields when no comments exist):
 {{
+  "title_en": "<short headline in English, ≤15 words>",
+  "title_zh": "<short headline in Chinese, ≤15 words>",
   "whats_new_en": "<1-2 sentences in English>",
   "whats_new_zh": "<1-2 sentences in Chinese>",
   "why_it_matters_en": "<1-2 sentences in English>",

@@ -82,49 +82,49 @@ class HorizonOrchestrator:
             # 6. Search related stories + enrich with background knowledge (2nd AI pass)
             await self._enrich_important_items(important_items)
 
-            # 7. Generate daily summary
+            # 7. Generate and save daily summaries for each configured language
             today = datetime.utcnow().strftime("%Y-%m-%d")
-            summary = await self._generate_summary(important_items, today, len(all_items))
+            for lang in self.config.ai.languages:
+                summary = await self._generate_summary(important_items, today, len(all_items), language=lang)
 
-            # 8. Save summary
-            summary_path = self.storage.save_daily_summary(today, summary)
-            self.console.print(f"💾 Saved summary to: {summary_path}\n")
+                # Save to data/summaries/
+                summary_path = self.storage.save_daily_summary(today, summary, language=lang)
+                self.console.print(f"💾 Saved {lang.upper()} summary to: {summary_path}\n")
 
-            # 8.5. Copy summary to docs/ for GitHub Pages
-            try:
-                import shutil
-                from pathlib import Path
+                # Copy to docs/ for GitHub Pages
+                try:
+                    from pathlib import Path
 
-                # Setup Jekyll post format: YYYY-MM-DD-title.md
-                post_filename = f"{today}-summary.md"
-                posts_dir = Path("docs/_posts")
-                posts_dir.mkdir(parents=True, exist_ok=True)
+                    post_filename = f"{today}-summary-{lang}.md"
+                    posts_dir = Path("docs/_posts")
+                    posts_dir.mkdir(parents=True, exist_ok=True)
 
-                dest_path = posts_dir / f"{today}-summary.md"
+                    dest_path = posts_dir / post_filename
 
-                # Add Jekyll front matter
-                front_matter = (
-                    "---\n"
-                    "layout: default\n"
-                    f"title: \"Horizon Summary: {today}\"\n"
-                    f"date: {today}\n"
-                    "---\n\n"
-                )
+                    # Add Jekyll front matter
+                    front_matter = (
+                        "---\n"
+                        "layout: default\n"
+                        f"title: \"Horizon Summary: {today} ({lang.upper()})\"\n"
+                        f"date: {today}\n"
+                        f"lang: {lang}\n"
+                        "---\n\n"
+                    )
 
-                # Check if summary starts with an H1 header and strip it if it duplicates the title
-                summary_content = summary
-                if summary_content.strip().startswith("# Horizon Daily -"):
-                    # Find the first newline and take everything after it
-                    parts = summary_content.split("\n", 1)
-                    if len(parts) > 1:
-                        summary_content = parts[1].strip()
+                    # Strip leading H1 header to avoid duplication with Jekyll title
+                    summary_content = summary
+                    first_line = summary_content.strip().split("\n")[0]
+                    if first_line.startswith("# "):
+                        parts = summary_content.split("\n", 1)
+                        if len(parts) > 1:
+                            summary_content = parts[1].strip()
 
-                with open(dest_path, "w") as f:
-                    f.write(front_matter + summary_content)
+                    with open(dest_path, "w", encoding="utf-8") as f:
+                        f.write(front_matter + summary_content)
 
-                self.console.print(f"📄 Copied summary to GitHub Pages: {dest_path}\n")
-            except Exception as e:
-                self.console.print(f"[yellow]⚠️  Failed to copy summary to docs/: {e}[/yellow]\n")
+                    self.console.print(f"📄 Copied {lang.upper()} summary to GitHub Pages: {dest_path}\n")
+                except Exception as e:
+                    self.console.print(f"[yellow]⚠️  Failed to copy {lang.upper()} summary to docs/: {e}[/yellow]\n")
 
             self.console.print("[bold green]✅ Horizon completed successfully![/bold green]")
 
@@ -299,6 +299,7 @@ class HorizonOrchestrator:
         items: List[ContentItem],
         date: str,
         total_fetched: int,
+        language: str = "en",
     ) -> str:
         """Generate daily summary.
 
@@ -306,6 +307,7 @@ class HorizonOrchestrator:
             items: Important items to include (already enriched with background/related)
             date: Date string
             total_fetched: Total items fetched
+            language: Output language ("en" or "zh")
 
         Returns:
             str: Markdown summary
@@ -314,4 +316,4 @@ class HorizonOrchestrator:
 
         summarizer = DailySummarizer()
 
-        return await summarizer.generate_summary(items, date, total_fetched)
+        return await summarizer.generate_summary(items, date, total_fetched, language=language)

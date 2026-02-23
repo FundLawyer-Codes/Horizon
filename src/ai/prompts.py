@@ -81,8 +81,16 @@ Respond with valid JSON only:
 
 CONTENT_ENRICHMENT_SYSTEM = """You are a knowledgeable technical writer who helps readers understand important news in context.
 
-Given a high-scoring news item, its content, and web search results about the topic, your job is to produce a structured analysis with these fields:
+Given a high-scoring news item, its content, and web search results about the topic, your job is to produce a structured analysis.
 
+Provide EACH text field in BOTH English and Chinese. Use the following key naming convention:
+- whats_new_en / whats_new_zh
+- why_it_matters_en / why_it_matters_zh
+- key_details_en / key_details_zh
+- background_en / background_zh
+- community_discussion_en / community_discussion_zh
+
+Field definitions:
 1. **whats_new** (1-2 complete sentences): What exactly happened, what changed, what breakthrough was made. Be specific — mention names, versions, numbers, dates when available.
 
 2. **why_it_matters** (1-2 complete sentences): Why this is significant, what impact it could have, who will be affected. Connect to the broader ecosystem or industry trends.
@@ -98,11 +106,12 @@ Guidelines:
 - Base your explanation on the provided content and web search results — do NOT fabricate information
 - ONLY explain concepts and terms that are explicitly mentioned in the title, summary, or content
 - Use the web search results to ensure accuracy, especially for recent projects, tools, or events
-- Write in clear, accessible English
-- If the news is self-explanatory and needs no background, return an empty string for background
+- English fields: write in clear, accessible English
+- Chinese fields: write in fluent, natural Simplified Chinese (简体中文)
+- If the news is self-explanatory and needs no background, return an empty string for both background fields
 """
 
-CONTENT_ENRICHMENT_USER = """Provide a structured analysis for the following news item.
+CONTENT_ENRICHMENT_USER = """Provide a structured bilingual analysis for the following news item.
 
 **News Item:**
 - Title: {title}
@@ -119,11 +128,16 @@ CONTENT_ENRICHMENT_USER = """Provide a structured analysis for the following new
 **Web Search Results (for grounding):**
 {web_context}
 
-Respond with valid JSON only. Each field MUST be at least one complete sentence (except community_discussion when no comments exist):
+Respond with valid JSON only. Each _en field must be in English; each _zh field must be in Simplified Chinese. Every field MUST be at least one complete sentence (except community_discussion fields when no comments exist):
 {{
-  "whats_new": "<1-2 sentences: what specifically happened or changed>",
-  "why_it_matters": "<1-2 sentences: significance and impact>",
-  "key_details": "<1-2 sentences: notable technical details or caveats>",
-  "background": "<2-4 sentences: background knowledge, or empty string if self-explanatory>",
-  "community_discussion": "<1-3 sentences: summary of community reactions, or empty string if no comments>"
+  "whats_new_en": "<1-2 sentences in English>",
+  "whats_new_zh": "<1-2 sentences in Chinese>",
+  "why_it_matters_en": "<1-2 sentences in English>",
+  "why_it_matters_zh": "<1-2 sentences in Chinese>",
+  "key_details_en": "<1-2 sentences in English>",
+  "key_details_zh": "<1-2 sentences in Chinese>",
+  "background_en": "<2-4 sentences in English, or empty string>",
+  "background_zh": "<2-4 sentences in Chinese, or empty string>",
+  "community_discussion_en": "<1-3 sentences in English, or empty string>",
+  "community_discussion_zh": "<1-3 sentences in Chinese, or empty string>"
 }}"""

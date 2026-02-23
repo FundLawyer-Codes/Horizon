@@ -180,21 +180,23 @@ class ContentEnricher:
             else:
                 raise ValueError(f"Invalid JSON response: {response}")
 
-        # Combine structured sub-fields into a single detailed_summary
-        parts = []
-        for field in ("whats_new", "why_it_matters", "key_details"):
-            text = result.get(field, "").strip()
-            if text:
-                parts.append(text)
+        # Combine structured sub-fields into per-language detailed_summary
+        for lang in ("en", "zh"):
+            parts = []
+            for field in ("whats_new", "why_it_matters", "key_details"):
+                text = result.get(f"{field}_{lang}", "").strip()
+                if text:
+                    parts.append(text)
+            if parts:
+                item.metadata[f"detailed_summary_{lang}"] = " ".join(parts)
 
-        if parts:
-            item.metadata["detailed_summary"] = " ".join(parts)
-        elif result.get("summary"):
-            # Fallback: accept legacy single-field format
-            item.metadata["detailed_summary"] = result["summary"]
+            if result.get(f"background_{lang}"):
+                item.metadata[f"background_{lang}"] = result[f"background_{lang}"]
 
-        if result.get("background"):
-            item.metadata["background"] = result["background"]
+            if result.get(f"community_discussion_{lang}"):
+                item.metadata[f"community_discussion_{lang}"] = result[f"community_discussion_{lang}"]
 
-        if result.get("community_discussion"):
-            item.metadata["community_discussion"] = result["community_discussion"]
+        # Backward-compatible fallback fields (English as default)
+        item.metadata["detailed_summary"] = item.metadata.get("detailed_summary_en", "")
+        item.metadata["background"] = item.metadata.get("background_en", "")
+        item.metadata["community_discussion"] = item.metadata.get("community_discussion_en", "")

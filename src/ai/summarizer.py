@@ -92,12 +92,21 @@ class DailySummarizer:
             "---\n\n"
         )
 
-        parts = []
-        parts.extend(self._format_item(item, labels, language) for item in items)
+        # TOC
+        toc_entries = []
+        for i, item in enumerate(items):
+            t = (item.metadata.get(f"title_{language}") or item.title).replace("[", "(").replace("]", ")")
+            if language == "zh":
+                t = _pangu(t)
+            score = item.ai_score or "?"
+            toc_entries.append(f"{i + 1}. [{t}](#item-{i + 1}) \u2b50\ufe0f {score}/10")
+        toc = "\n".join(toc_entries) + "\n\n---\n\n"
 
-        return header + "".join(parts)
+        parts = [self._format_item(item, labels, language, i + 1) for i, item in enumerate(items)]
 
-    def _format_item(self, item: ContentItem, labels: dict, language: str) -> str:
+        return header + toc + "".join(parts)
+
+    def _format_item(self, item: ContentItem, labels: dict, language: str, index: int) -> str:
         """Format a single ContentItem into Markdown."""
         title = (
             item.metadata.get(f"title_{language}")
@@ -135,20 +144,11 @@ class DailySummarizer:
         if item.published_at:
             day = item.published_at.strftime("%d").lstrip("0")
             source_parts.append(item.published_at.strftime(f"%b {day}, %H:%M"))
-        source_parts.append(f"[\u2197]({url})")  # ↗
         source_line = " \u00b7 ".join(source_parts)  # ·
 
-        # <summary>: plain text only (no interactive elements) + optional one-liner preview
-        summary_title = f"## {title} \u2b50\ufe0f {score}/10"  # ⭐️
-        ai_preview = _pangu(item.ai_summary) if language == "zh" and item.ai_summary else item.ai_summary
-        if ai_preview:
-            summary_block = f"<summary>\n{summary_title}\n\n{ai_preview}\n</summary>"
-        else:
-            summary_block = f"<summary>\n{summary_title}\n</summary>"
-
         lines = [
-            '<details markdown="1">',
-            summary_block,
+            f'<a id="item-{index}"></a>',
+            f"## [{title}]({url}) \u2b50\ufe0f {score}/10",  # ⭐️
             "",
             summary,
             "",
@@ -169,9 +169,9 @@ class DailySummarizer:
             lines.append(f"**{labels['tags']}**: {tags_str}")
 
         lines.append("")
-        lines.append("</details>")
+        lines.append("---")
 
-        return "\n".join(lines) + "\n\n---\n\n"
+        return "\n".join(lines) + "\n\n"
 
     def _generate_empty_summary(self, date: str, total_fetched: int, labels: dict) -> str:
         """Generate summary when no high-scoring items were found."""

@@ -1,8 +1,20 @@
 """Daily summary generation — pure programmatic rendering."""
 
+import re
 from typing import List, Dict
 
 from ..models import ContentItem
+
+
+_CJK = r"[\u4e00-\u9fff\u3400-\u4dbf]"
+_ASCII = r"[A-Za-z0-9]"
+
+
+def _pangu(text: str) -> str:
+    """Insert a space between CJK and ASCII letters/digits (Pangu spacing)."""
+    text = re.sub(rf"({_CJK})({_ASCII})", r"\1 \2", text)
+    text = re.sub(rf"({_ASCII})({_CJK})", r"\1 \2", text)
+    return text
 
 
 LABELS = {
@@ -108,6 +120,12 @@ class DailySummarizer:
             or ""
         )
 
+        if language == "zh":
+            title = _pangu(title)
+            summary = _pangu(summary)
+            background = _pangu(background)
+            discussion = _pangu(discussion)
+
         # Source line with parts joined by " · ", link appended at end
         source_type = item.source_type.value
         source_parts = [source_type]
@@ -122,8 +140,9 @@ class DailySummarizer:
 
         # <summary>: plain text only (no interactive elements) + optional one-liner preview
         summary_title = f"## {title} \u2b50\ufe0f {score}/10"  # ⭐️
-        if item.ai_summary:
-            summary_block = f"<summary>\n{summary_title}\n\n{item.ai_summary}\n</summary>"
+        ai_preview = _pangu(item.ai_summary) if language == "zh" and item.ai_summary else item.ai_summary
+        if ai_preview:
+            summary_block = f"<summary>\n{summary_title}\n\n{ai_preview}\n</summary>"
         else:
             summary_block = f"<summary>\n{summary_title}\n</summary>"
 

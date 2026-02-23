@@ -197,12 +197,12 @@ class RedditScraper(BaseScraper):
     async def _reddit_get(self, url: str, params: dict) -> Optional[dict]:
         headers = {"User-Agent": USER_AGENT}
         try:
-            response = await self.client.get(url, params=params, headers=headers)
+            response = await self.client.get(url, params=params, headers=headers, follow_redirects=True)
             if response.status_code == 429:
                 retry_after = int(response.headers.get("Retry-After", 5))
                 logger.warning("Reddit rate limited, retrying after %ds", retry_after)
                 await asyncio.sleep(retry_after)
-                response = await self.client.get(url, params=params, headers=headers)
+                response = await self.client.get(url, params=params, headers=headers, follow_redirects=True)
             response.raise_for_status()
             return response.json()
         except httpx.HTTPError as e:

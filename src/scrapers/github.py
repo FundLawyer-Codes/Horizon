@@ -85,7 +85,7 @@ class GitHubScraper(BaseScraper):
         items = []
 
         try:
-            response = await self.client.get(url, headers=self._get_headers())
+            response = await self.client.get(url, headers=self._get_headers(), follow_redirects=True)
             response.raise_for_status()
             events = response.json()
 
@@ -188,7 +188,7 @@ class GitHubScraper(BaseScraper):
         items = []
 
         try:
-            response = await self.client.get(url, headers=self._get_headers())
+            response = await self.client.get(url, headers=self._get_headers(), follow_redirects=True)
             response.raise_for_status()
             releases = response.json()
 

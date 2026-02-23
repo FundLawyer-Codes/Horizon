@@ -81,6 +81,16 @@
       ],
       "users": [],
       "fetch_comments": 10
+    },
+    "telegram": {
+      "enabled": true,
+      "channels": [
+        {
+          "channel": "zaihuapd",
+          "enabled": true,
+          "fetch_limit": 20
+        }
+      ]
     }
   },
   "filtering": {

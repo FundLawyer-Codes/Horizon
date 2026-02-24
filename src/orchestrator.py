@@ -1,6 +1,7 @@
 """Main orchestrator coordinating the entire workflow."""
 
 import asyncio
+import re
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict
@@ -79,6 +80,15 @@ class HorizonOrchestrator:
             self.console.print(
                 f"⭐️ {len(important_items)} items scored ≥ {threshold}\n"
             )
+
+            # 5.5 Semantic deduplication: drop items covering the same topic
+            deduped_items = self._merge_topic_duplicates(important_items)
+            if len(deduped_items) < len(important_items):
+                self.console.print(
+                    f"🧹 Removed {len(important_items) - len(deduped_items)} topic duplicates "
+                    f"→ {len(deduped_items)} unique items\n"
+                )
+            important_items = deduped_items
 
             # Show per-sub-source selection breakdown
             selected_counts: Dict[str, int] = defaultdict(int)
@@ -292,6 +302,84 @@ class HorizonOrchestrator:
             merged.append(primary)
 
         return merged
+
+    @staticmethod
+    def _title_tokens(title: str) -> set:
+        tokens = set()
+        for w in re.findall(r'[a-zA-Z]{3,}', title):
+            tokens.add(w.lower())
+        cjk = re.sub(r'[^\u4e00-\u9fff]', '', title)
+        for i in range(len(cjk) - 1):
+            tokens.add(cjk[i:i + 2])
+        return tokens
+
+    def _merge_topic_duplicates(
+        self, items: List[ContentItem], threshold: float = 0.33
+    ) -> List[ContentItem]:
+        """Drop lower-scored items that cover the same topic as a higher-scored one.
+
+        Items must already be sorted by ai_score descending.
+        Uses Jaccard similarity on ASCII words + CJK bigrams of the original title.
+        """
+        kept: List[ContentItem] = []
+        for item in items:
+            tokens = self._title_tokens(item.title)
+            for accepted in kept:
+                a = self._title_tokens(accepted.title)
+                union = a | tokens
+                if not union:
+                    continue
+                if len(a & tokens) / len(union) >= threshold:
+                    break
+            else:
+                kept.append(item)
+        return kept
+
+    @staticmethod
+    def _merge_item_content(primary: ContentItem, secondary: ContentItem) -> None:
+        """Append secondary's scraped content (comments) into primary."""
+        if not secondary.content:
+            return
+        if secondary.content in (primary.content or ""):
+            return
+        label = secondary.source_type.value
+        primary.content = (primary.content or "") + f"\n\n--- From {label} ---\n{secondary.content}"
+
+    def _merge_topic_duplicates(
+        self, items: List[ContentItem], threshold: float = 0.33
+    ) -> List[ContentItem]:
+        """Merge items covering the same topic into the highest-scored one.
+
+        Two items are considered duplicates when either:
+          - Title token Jaccard >= threshold, or
+          - They share >= 2 ai_tags AND title Jaccard >= 0.15
+
+        Items must already be sorted by ai_score descending.
+        Content (comments) from duplicate items is merged into the primary.
+        """
+        kept: List[ContentItem] = []
+        for item in items:
+            tokens = self._title_tokens(item.title)
+            item_tags = set(item.ai_tags or [])
+            merged_into = None
+            for accepted in kept:
+                a_tokens = self._title_tokens(accepted.title)
+                union = a_tokens | tokens
+                title_sim = len(a_tokens & tokens) / len(union) if union else 0.0
+                tag_overlap = len(set(accepted.ai_tags or []) & item_tags)
+                if title_sim >= threshold or (tag_overlap >= 2 and title_sim >= 0.15):
+                    merged_into = accepted
+                    self.console.print(
+                        f"   [dim]dedup: title_sim={title_sim:.2f} tag_overlap={tag_overlap}[/dim]\n"
+                        f"   [dim]  keep : {accepted.title}[/dim]\n"
+                        f"   [dim]  merge: {item.title}[/dim]"
+                    )
+                    break
+            if merged_into is not None:
+                self._merge_item_content(merged_into, item)
+            else:
+                kept.append(item)
+        return kept
 
     async def _enrich_important_items(self, items: List[ContentItem]) -> None:
         """Enrich items with background knowledge (2nd AI pass).

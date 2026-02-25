@@ -23,6 +23,7 @@ LABELS = {
         "source": "Source",
         "background": "Background",
         "discussion": "Discussion",
+        "references": "References",
         "tags": "Tags",
         "empty_body": (
             "No significant developments today. This might indicate:\n"
@@ -40,6 +41,7 @@ LABELS = {
         "source": "来源",
         "background": "背景",
         "discussion": "社区讨论",
+        "references": "参考链接",
         "tags": "标签",
         "empty_body": (
             "今日暂无重要动态，可能原因：\n"
@@ -161,6 +163,14 @@ class DailySummarizer:
         if background:
             lines.append("")
             lines.append(f"**{labels['background']}**: {background}")
+
+        sources = meta.get("sources") or []
+        if sources:
+            items_html = "".join(f'<li><a href="{s["url"]}">{s["title"]}</a></li>\n' for s in sources)
+            lines += [
+                "",
+                f'<details><summary>{labels["references"]}</summary>\n<ul>\n{items_html}\n</ul>\n</details>',
+            ]
 
         if discussion:
             lines.append("")

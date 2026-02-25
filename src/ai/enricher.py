@@ -49,15 +49,11 @@ class ContentEnricher:
                     print(f"Error enriching item {item.id}: {e}")
                 progress.advance(task)
 
-    async def _web_search(self, query: str, max_results: int = 3) -> str:
+    async def _web_search(self, query: str, max_results: int = 3) -> list:
         """Search the web for context via DuckDuckGo.
 
-        Args:
-            query: Search query
-            max_results: Max number of results
-
         Returns:
-            Formatted string of search snippets
+            List of dicts with keys: title, url, body
         """
         try:
             # Suppress primp "Impersonate ... does not exist" stderr warning
@@ -70,17 +66,12 @@ class ContentEnricher:
                 sys.stderr.close()
                 sys.stderr = stderr
         except Exception:
-            return ""
+            return []
 
-        if not results:
-            return ""
-
-        lines = []
-        for r in results:
-            title = r.get("title", "")
-            body = r.get("body", "")
-            lines.append(f"- {title}: {body}")
-        return "\n".join(lines)
+        return [
+            {"title": r.get("title", ""), "url": r.get("href", ""), "body": r.get("body", "")}
+            for r in (results or [])
+        ]
 
     async def _extract_concepts(self, item: ContentItem, content_text: str) -> List[str]:
         """Ask AI to identify concepts that need explanation.
@@ -141,12 +132,18 @@ class ContentEnricher:
         queries = await self._extract_concepts(item, content_text)
 
         # Step 2: Search web for each concept
+        all_results = []
         web_sections = []
         for query in queries:
-            snippets = await self._web_search(query)
-            if snippets:
-                web_sections.append(f"**{query}:**\n{snippets}")
+            results = await self._web_search(query)
+            all_results.extend(results)
+            if results:
+                lines = [f"- [{r['title']}]({r['url']}): {r['body']}" for r in results]
+                web_sections.append(f"**{query}:**\n" + "\n".join(lines))
         web_context = "\n\n".join(web_sections) if web_sections else ""
+
+        # Index of available URLs for citation validation
+        available_urls = {r["url"]: r["title"] for r in all_results if r.get("url")}
 
         # Step 3: AI generates background grounded in search results
         user_prompt = CONTENT_ENRICHMENT_USER.format(
@@ -198,6 +195,16 @@ class ContentEnricher:
 
             if result.get(f"community_discussion_{lang}"):
                 item.metadata[f"community_discussion_{lang}"] = result[f"community_discussion_{lang}"]
+
+        # Store citation sources — only URLs that actually came from our search results
+        if result.get("sources") and available_urls:
+            valid = [
+                {"url": u, "title": available_urls[u]}
+                for u in result["sources"]
+                if u in available_urls
+            ]
+            if valid:
+                item.metadata["sources"] = valid
 
         # Backward-compatible fallback fields (English as default)
         item.metadata["detailed_summary"] = item.metadata.get("detailed_summary_en", "")

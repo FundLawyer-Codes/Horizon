@@ -110,8 +110,9 @@ Guidelines:
 - ONLY explain concepts and terms that are explicitly mentioned in the title, summary, or content
 - Use the web search results to ensure accuracy, especially for recent projects, tools, or events
 - English fields: write in clear, accessible English
-- Chinese fields: write in fluent, natural Simplified Chinese (简体中文)
+- Chinese fields: write in fluent, natural Simplified Chinese (简体中文); keep technical abbreviations, acronyms, and widely-used proper nouns in their original English form.
 - If the news is self-explanatory and needs no background, return an empty string for both background fields
+- For **sources**: pick 1-3 URLs from the Web Search Results that you actually relied on for the background fields. Only use URLs that appear verbatim in the search results above — do not invent or modify URLs.
 """
 
 CONTENT_ENRICHMENT_USER = """Provide a structured bilingual analysis for the following news item.
@@ -144,5 +145,6 @@ Respond with valid JSON only. Each _en field must be in English; each _zh field 
   "background_en": "<2-4 sentences in English, or empty string>",
   "background_zh": "<2-4 sentences in Chinese, or empty string>",
   "community_discussion_en": "<1-3 sentences in English, or empty string>",
-  "community_discussion_zh": "<1-3 sentences in Chinese, or empty string>"
+  "community_discussion_zh": "<1-3 sentences in Chinese, or empty string>",
+  "sources": ["<url from search results>", "..."]
 }}"""

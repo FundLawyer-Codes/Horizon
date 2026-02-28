@@ -1,63 +1,25 @@
 {
   "version": "1.0",
   "ai": {
-    "provider": "openai",
-    "model": "deepseek-chat",
-    "base_url": "https://api.deepseek.com",
-    "api_key_env": "OPENAI_API_KEY",
+    "provider": "anthropic",
+    "model": "claude-haiku-4-5-20251001",
+    "api_key_env": "ANTHROPIC_API_KEY",
     "temperature": 0.3,
-    "max_tokens": 8192,
-    "languages": ["zh", "en"]
+    "max_tokens": 4096,
+    "languages": ["en", "zh"]
   },
   "sources": {
-    "github": [
-      {
-        "type": "user_events",
-        "username": "karpathy",
-        "enabled": true
-      },
-      {
-        "type": "repo_releases",
-        "owner": "vllm-project",
-        "repo": "vllm",
-        "enabled": true
-      },
-      {
-        "type": "repo_releases",
-        "owner": "sgl-project",
-        "repo": "sglang",
-        "enabled": true
-      },
-      {
-        "type": "repo_releases",
-        "owner": "triton-lang",
-        "repo": "triton",
-        "enabled": true
-      }
-    ],
     "hackernews": {
       "enabled": true,
-      "fetch_top_stories": 10,
-      "min_score": 200
+      "fetch_top_stories": 20,
+      "min_score": 100
     },
-    "rss": [
+    "github": [
       {
-        "name": "Simon Willison",
-        "url": "https://simonwillison.net/atom/everything/",
-        "enabled": true,
-        "category": "ai-tools"
-      },
-      {
-        "name": "GitHub Trending - Daily",
-        "url": "https://mshibanami.github.io/GitHubTrendingRSS/daily/all.xml",
-        "enabled": true,
-        "category": "github-trending"
-      },
-      {
-        "name": "LWN.net",
-        "url": "https://lwn.net/headlines/full_text?key=${LWN_KEY}",
-        "enabled": true,
-        "category": "linux-kernel"
+        "type": "repo_releases",
+        "owner": "astral-sh",
+        "repo": "uv",
+        "enabled": true
       }
     ],
     "reddit": {
@@ -69,33 +31,104 @@
           "sort": "hot",
           "time_filter": "day",
           "fetch_limit": 15,
-          "min_score": 60
+          "min_score": 50
         },
         {
-          "subreddit": "LocalLLaMA",
+          "subreddit": "fintech",
           "enabled": true,
           "sort": "hot",
           "time_filter": "day",
-          "fetch_limit": 15,
-          "min_score": 60
+          "fetch_limit": 10,
+          "min_score": 30
+        },
+        {
+          "subreddit": "payments",
+          "enabled": true,
+          "sort": "hot",
+          "time_filter": "day",
+          "fetch_limit": 10,
+          "min_score": 20
         }
       ],
-      "users": [],
-      "fetch_comments": 10
+      "fetch_comments": 5
     },
-    "telegram": {
-      "enabled": true,
-      "channels": [
-        {
-          "channel": "zaihuapd",
-          "enabled": true,
-          "fetch_limit": 20
-        }
-      ]
-    }
+    "rss": [
+      {
+        "name": "PYMNTS - Cross-Border Payments",
+        "url": "https://www.pymnts.com/category/cross-border-commerce/cross-border-payments/feed/",
+        "enabled": true,
+        "category": "payments"
+      },
+      {
+        "name": "FinTech Futures",
+        "url": "https://www.fintechfutures.com/feed/",
+        "enabled": true,
+        "category": "payments"
+      },
+      {
+        "name": "FinTech Global",
+        "url": "https://fintech.global/feed/",
+        "enabled": true,
+        "category": "payments"
+      },
+      {
+        "name": "The Paypers",
+        "url": "https://thepaypers.com/rss",
+        "enabled": true,
+        "category": "payments"
+      },
+      {
+        "name": "BIS Press Releases",
+        "url": "https://rsshub.app/bis/press",
+        "enabled": true,
+        "category": "regulation"
+      },
+      {
+        "name": "BIS Working Papers",
+        "url": "https://rsshub.app/bis/work",
+        "enabled": true,
+        "category": "regulation"
+      },
+      {
+        "name": "IMF Blog",
+        "url": "https://rsshub.app/imf/blog",
+        "enabled": true,
+        "category": "regulation"
+      },
+      {
+        "name": "中国人民银行新闻",
+        "url": "https://rsshub.app/pbc/news",
+        "enabled": true,
+        "category": "china-regulation"
+      },
+      {
+        "name": "国家外汇管理局",
+        "url": "https://rsshub.app/safe/news",
+        "enabled": true,
+        "category": "china-regulation"
+      },
+      {
+        "name": "亿邦动力",
+        "url": "https://www.ebrun.com/rss.xml",
+        "enabled": true,
+        "category": "china-ecommerce"
+      },
+      {
+        "name": "36氪",
+        "url": "https://36kr.com/feed",
+        "enabled": true,
+        "category": "china-tech"
+      },
+      {
+        "name": "Simon Willison",
+        "url": "https://simonwillison.net/atom/everything/",
+        "enabled": true,
+        "category": "ai-tools"
+      }
+    ]
   },
   "filtering": {
-    "ai_score_threshold": 7.0,
-    "time_window_hours": 24
+    "ai_score_threshold": 6.5,
+    "time_window_hours": 48
   }
 }

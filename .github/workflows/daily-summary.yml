@@ -1,9 +1,9 @@
 name: Daily Horizon Summary
 
 on:
-  # schedule:
-  #   - cron: '0 0 */2 * *'  # Runs every 2 days at 00:00 UTC
-  workflow_dispatch:      # Allow manual trigger
+  schedule:
+    - cron: '0 1 * * *'  # 每天 UTC 01:00（北京时间 09:00）自动运行
+  workflow_dispatch:      # 允许手动触发
 
 jobs:
   daily-summary:
@@ -28,12 +28,7 @@ jobs:
 
       - name: Run Horizon
         env:
-          # Map secrets to environment variables expected by config.json
-          # Modify these based on your config.json provider settings
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          LWN_KEY: ${{ secrets.LWN_KEY }}
         run: uv run horizon --hours 48
 
       - name: Deploy to GitHub Pages
@@ -41,7 +36,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs
-          keep_files: true  # Keep existing summaries on gh-pages branch
+          keep_files: true
           commit_message: "📝 Daily Summary: $(date +'%Y-%m-%d')"
           publish_branch: gh-pages
           enable_jekyll: true

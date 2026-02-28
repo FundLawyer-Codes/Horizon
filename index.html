@@ -184,8 +184,8 @@ layout: null
 </header>
 
 <main>
-  {% assign en_post = site.posts | where: "language", "en" | first %}
-  {% assign zh_post = site.posts | where: "language", "zh" | first %}
+{% assign en_post = site.posts | where: "lang", "en" | first %}
+{% assign zh_post = site.posts | where: "lang", "zh" | first %}
 
   <div id="en-content" class="lang-content active">
     {% if en_post %}

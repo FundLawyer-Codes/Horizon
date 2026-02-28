@@ -1,24 +1,108 @@
 ---
-layout: default
+layout: null
 ---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horizon Daily — AI News Digest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── 报纸风格核心 CSS ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Lora", "PingFang SC", "Source Han Serif SC", serif;
+      font-size: 17px; line-height: 1.8; color: #1a1a1a; background: #fdfdfb;
+      -webkit-font-smoothing: antialiased; padding-bottom: 100px;
+    }
 
-{% assign en_post = site.posts | where: "lang", "en" | first %}
-{% assign zh_post = site.posts | where: "lang", "zh" | first %}
+    header {
+      max-width: 1000px; margin: 0 auto; padding: 40px 24px 10px; text-align: center;
+      border-bottom: 4px solid #1a1a1a; position: relative;
+    }
+    header::after { content: ""; display: block; margin-top: 4px; border-bottom: 1px solid #1a1a1a; }
 
-<div id="en-content" class="lang-content active">
-  {% if en_post %}
-    <div class="digest-date">{{ en_post.date | date: "%A, %B %-d, %Y" }}</div>
-    {{ en_post.content }}
-  {% else %}
-    <p style="text-align:center; margin-top:50px;">No digest available.</p>
-  {% endif %}
-</div>
+    .site-name { 
+      font-family: "Playfair Display", serif; font-size: clamp(40px, 8vw, 60px); 
+      font-weight: 900; letter-spacing: -2px; color: #111; text-transform: uppercase; line-height: 1;
+    }
+    .header-sub { 
+      font-family: "Inter", sans-serif; font-size: 11px; font-weight: 700; 
+      text-transform: uppercase; letter-spacing: 2px; color: #666; margin-top: 15px; 
+    }
 
-<div id="zh-content" class="lang-content">
-  {% if zh_post %}
-    <div class="digest-date">{{ zh_post.date | date: "%Y年%-m月%-d日" }}</div>
-    {{ zh_post.content }}
-  {% else %}
-    <p style="text-align:center; margin-top:50px;">暂无内容。</p>
-  {% endif %}
-</div>
+    #lang-btn {
+      margin-top: 20px; font-family: "Inter", sans-serif; font-size: 12px; font-weight: 700;
+      color: #1a1a1a; background: none; border: 1px solid #1a1a1a; padding: 6px 16px; 
+      cursor: pointer; text-transform: uppercase; transition: all 0.2s;
+    }
+    #lang-btn:hover { background: #1a1a1a; color: #fff; }
+
+    main { max-width: 750px; margin: 0 auto; padding: 50px 24px; }
+    .lang-content { display: none; }
+    .lang-content.active { display: block; }
+
+    .digest-date { 
+      font-family: "Inter", sans-serif; font-size: 12px; font-weight: 700; 
+      text-transform: uppercase; color: #888; margin-bottom: 40px; 
+      text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px;
+    }
+    
+    .lang-content h1 { 
+      font-family: "Playfair Display", serif; font-size: 38px; font-weight: 900; 
+      color: #111; margin-bottom: 25px; text-align: center; line-height: 1.1; 
+    }
+    .lang-content h2 { 
+      font-family: "Playfair Display", serif; font-size: 24px; font-weight: 700; 
+      margin: 45px 0 15px; border-top: 2px solid #1a1a1a; padding-top: 20px;
+    }
+    .lang-content p { text-align: justify; margin-bottom: 1.6em; }
+    
+    /* 首字下沉 */
+    .lang-content h1 + p::first-letter {
+      float: left; font-family: "Playfair Display", serif; font-size: 75px; 
+      line-height: 60px; padding-right: 12px; font-weight: 900; color: #111;
+    }
+
+    a { color: #003366; text-decoration: underline; text-underline-offset: 3px; }
+    code { font-family: "Inter", sans-serif; font-size: 13px; background: #f0f2f5; padding: 2px 6px; border-radius: 3px; color: #444; }
+    hr { border: none; border-top: 3px double #1a1a1a; margin: 50px 0; }
+
+    @media (max-width: 600px) {
+      .site-name { font-size: 36px; }
+      .lang-content h1 { font-size: 28px; }
+      main { padding: 30px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="site-name">Horizon Daily</div>
+  <div class="header-sub">Intelligence Report — Digital Jurisprudence — Est. 2024</div>
+  <button id="lang-btn" onclick="toggleLang()">Switch to 中文</button>
+</header>
+
+<main>
+  {% assign en_post = site.posts | where: "lang", "en" | first %}
+  {% assign zh_post = site.posts | where: "lang", "zh" | first %}
+
+  <div id="en-content" class="lang-content active">
+    {% if en_post %}
+      <div class="digest-date">{{ en_post.date | date: "%A, %B %-d, %Y" }}</div>
+      <h1>{{ en_post.title }}</h1>
+      {{ en_post.content }}
+    {% else %}
+      <p style="text-align:center; color:#999;">No English digest found in _posts.</p>
+    {% endif %}
+  </div>
+
+  <div id="zh-content" class="lang-content">
+    {% if zh_post %}
+      <div class="digest-date">{{ zh_post.date | date: "%Y年%-m月%-d日" }}</div>
+      <h1>{{ zh_post.title }}</h1>
+      {{ zh_post.content }}
+    {% else %}
+      <p style="text-align:center; color:#999;">未在 _posts 文件夹中找到中文内容。</p>
+    {% endif %}

@@ -1,84 +1,24 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ page.title | default: site.title }}</title>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700;900&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+---
+layout: default
+---
 
-    body {
-      font-family: "Lora", "PingFang SC", "Source Han Serif SC", serif;
-      font-size: 17px; line-height: 1.8; color: #1a1a1a; background: #fdfdfb;
-      -webkit-font-smoothing: antialiased;
-    }
+{% assign en_post = site.posts | where: "lang", "en" | first %}
+{% assign zh_post = site.posts | where: "lang", "zh" | first %}
 
-    /* ── WSJ Header ── */
-    header {
-      max-width: 900px; margin: 0 auto; padding: 40px 24px 10px; text-align: center;
-      border-bottom: 4px solid #1a1a1a; position: relative;
-    }
-    header::after { content: ""; display: block; margin-top: 4px; border-bottom: 1px solid #1a1a1a; }
+<div id="en-content" class="lang-content active">
+  {% if en_post %}
+    <div class="digest-date">{{ en_post.date | date: "%A, %B %-d, %Y" }}</div>
+    {{ en_post.content }}
+  {% else %}
+    <p style="text-align:center; margin-top:50px;">No digest available.</p>
+  {% endif %}
+</div>
 
-    .site-name { 
-      font-family: "Playfair Display", serif; font-size: 46px; font-weight: 900; 
-      letter-spacing: -1.5px; color: #111; text-transform: uppercase; line-height: 1;
-    }
-    .site-name a { color: inherit; text-decoration: none; }
-    .header-sub { font-family: "Inter", sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: #666; margin-top: 10px; }
-
-    #lang-btn {
-      margin-top: 15px; font-family: "Inter", sans-serif; font-size: 12px; font-weight: 700;
-      color: #1a1a1a; background: none; border: 1px solid #1a1a1a; padding: 4px 12px; cursor: pointer;
-    }
-
-    /* ── Layout ── */
-    main { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
-    .lang-content { display: none; }
-    .lang-content.active { display: block; }
-
-    /* ── Typography ── */
-    .digest-date { font-family: "Inter", sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 30px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-    
-    .lang-content h1 { font-family: "Playfair Display", serif; font-size: 32px; font-weight: 900; color: #111; margin-bottom: 20px; text-align: center; line-height: 1.2; }
-    .lang-content h2 { font-family: "Playfair Display", serif; font-size: 22px; font-weight: 700; margin: 40px 0 12px; border-top: 1px solid #1a1a1a; padding-top: 15px; }
-    .lang-content p { text-align: justify; margin-bottom: 1.5em; }
-    
-    /* 首字下沉效果 */
-    .lang-content h1 + p::first-letter {
-      float: left; font-family: "Playfair Display", serif; font-size: 70px; line-height: 60px; padding-right: 8px; font-weight: 900;
-    }
-
-    a { color: #003366; text-underline-offset: 3px; }
-    code { font-family: "Inter", sans-serif; font-size: 13px; background: #f0f2f5; padding: 2px 6px; border-radius: 3px; }
-    hr { border: none; border-top: 3px double #ddd; margin: 40px 0; }
-
-    @media (max-width: 600px) {
-      .site-name { font-size: 32px; }
-      header { padding: 20px 16px 10px; }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="site-name"><a href="{{ site.baseurl }}/">Horizon Daily</a></div>
-    <div class="header-sub">AI News Digest — Vol. 1 — Issue 01</div>
-    <button id="lang-btn" onclick="toggleLang()">中文</button>
-  </header>
-  <main>
-    {{ content }}
-  </main>
-  <script>
-    function toggleLang() {
-      const btn = document.getElementById('lang-btn');
-      const en = document.getElementById('en-content');
-      const zh = document.getElementById('zh-content');
-      const isEn = en.classList.contains('active');
-      en.classList.toggle('active', !isEn);
-      zh.classList.toggle('active', isEn);
-      btn.textContent = isEn ? 'English' : '中文';
-    }
-  </script>
-</body>
-</html>
+<div id="zh-content" class="lang-content">
+  {% if zh_post %}
+    <div class="digest-date">{{ zh_post.date | date: "%Y年%-m月%-d日" }}</div>
+    {{ zh_post.content }}
+  {% else %}
+    <p style="text-align:center; margin-top:50px;">暂无内容。</p>
+  {% endif %}
+</div>

@@ -1,11 +1,12 @@
+theme: jekyll-theme-cayman
 title: Horizon Daily
-description: AI-curated daily digest of tech and payments news
-baseurl: "/Horizon"
-url: "https://fundlawyer-codes.github.io"
+description: AI-curated daily digest of tech and research news
+baseurl: "/Horizon" # the subpath of your site, e.g. /blog
+url: "https://thysrael.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 
+# Build settings
 markdown: kramdown
-future: true
-
+future: true # Allow future posts to be published
 exclude:
   - ".github"
   - "node_modules"
